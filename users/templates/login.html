@@ -1,0 +1,28 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>Welcome</title>  
+    {% load static %}     
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>  
+</head>  
+<body>  
+  <h2>Welcome people, here you can watch videos and like them with a viewer's account.<br>
+     If you want you can create them with a creator's account</h2>
+  <div class="container mt-5"><h2 class="h2"> SIGNIN</h2></div>
+  <div class="login-container">
+  <form method="POST" class="form-login" action="/">  
+        {% csrf_token %}  
+        {{ form.as_p }}
+        <input class="btn btn-sm btn-primary" type="submit" value="Submit">  
+</form> 
+</div>
+<div class="container-button mr-2" role="group" aria-label="First group">
+  <h3 class="h3">Sign up as</h3>
+  <a class="btn btn-primary ml-2" href="{% url 'creatorsignup' %}">video creator</a>
+  <a class="btn btn-primary ml-2" href="{% url 'viewersignup' %}">viewer</a>
+</div> 
+</body>  
+</html>  

@@ -1,0 +1,86 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>{{ user.username }}'s profile</title>  
+     {% load static %}  
+     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"> 
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>  
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+
+</head>  
+<body>  
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12 col-sm-12">
+				<h1 class="tm-title text-center bold shadow">Hi, {{ user.username }}!</h1>
+			</div>
+		</div>
+  </div>
+  <div class="container" aria-label="First group">
+    <!-- <button type="button" class="btn btn-secondary">-->
+     <a class="btn btn-primary" href="/editviewer/{{ user.username }}">Edit profile</a>
+     <a class="btn btn-primary" href="/logout">logout </a>
+    <!---</button> -->
+    <!-- <button type="button" class="btn btn-secondary"><a href="deleteviewer/{{ user.username }}">Delete your account</a></button> -->
+  </div>
+<div class="container">
+  {% if videos %}
+    <h3 class="text-center">VIDEOS</h3>
+      {% for video in videos %}  
+        <div class="card" style="margin-top:10rem; margin-left:40rem; width: 28rem;">
+          <iframe class="embed-responsive-item" style="height:300px; width:500px" src="{{ video.url }}" allowfullscreen></iframe>
+          <div class="card-body">
+          <h4 class="h4 card-title">{{ video.name }}</h4>
+            <p class="card-text">likes: {{ video.total_likes }}<br>
+            by: {{ video.creator }} </p>
+            {% if video.id in already_liked %} 
+            <button><a name="{{ video.id }}" style="font-size:40px;color: blue;" class="likin" id="co"><i class="fa fa-thumbs-up" aria-hidden="true"></i></a></button>
+            {% else %}
+            <button><a name="{{ video.id }}" style="font-size:40px;color: black;" class="likin" id="co"><i class="fa fa-thumbs-up" aria-hidden="true"></i></a></button>
+        {% endif %}
+      </div>
+    </div>
+{% endfor %}
+{% else %}  
+<h3>No videos right now</h3>
+{% endif %}
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+// AJAX CALL
+$(document).ready(function() {
+
+$('.likin').click(function(){
+  console.log("clicked")
+
+    $.ajax({
+             type: "POST",
+             url: "/showvideo",
+             data: {'video_id': $(this).attr('name'),'operation':'like_submit','csrfmiddlewaretoken': '{{ csrf_token }}'},
+             dataType: "json",
+             success: function(response) {
+              console.log("clicked")
+              selector = document.getElementsByName(response.video_id);
+                    if(response.liked==true){
+                      $(selector).css("color","blue");
+                    }
+                    else if(response.liked==false){
+                      $(selector).css("color","black");
+
+                    }
+
+
+              }
+
+        });
+
+  })
+
+})
+</script>
+
+</body>  
+</html>  

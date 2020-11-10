@@ -1,0 +1,58 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>Add video</title>  
+    {% load static %}  
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"> 
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>  
+</head>  
+<body>  
+<form method="POST" class="post-form" action="/addvideo">  
+        {% csrf_token %}  
+    <div style="margin-left:500px">  
+<br>  
+    <div class="form-group row">  
+    <label class="col-sm-1 col-form-label"></label>  
+    <div class="col-sm-4">  
+    <h2>Enter Details of new video, {{ user }}</h2>  
+    </div>  
+  </div>  
+    <div class="form-group row">  
+    <label class="col-sm-2 col-form-label"><h3>What is the video's title:</h3></label>  
+    <div class="col-sm-4">  
+      {{ form.name }}  
+    </div>  
+  </div>  
+  <div class="form-group row">  
+    <label class="col-sm-2 col-form-label"><h3>Add a link to the video:</h3></label>  
+    <div class="col-sm-4">  
+      {{ form.url }}  
+    </div>  
+  </div>  
+  <div class="form-group row">  
+    <label class="col-sm-2 col-form-label"><h3>Release date:</h3></label>  
+    <div class="col-sm-4">  
+      {{ form.release_date }}  
+    </div>  
+  </div>  
+  <div class="form-group row">  
+    <label class="col-sm-2 col-form-label"><h3>Creator:</h3></label>  
+    <div class="col-sm-4">  
+      {{ form.creator }}  
+    </div>  
+  </div> 
+      
+
+    <div class="form-group row">  
+    <label class="col-sm-1 col-form-label"></label>  
+    <div class="col-sm-4">  
+      <button type="submit" class="btn btn-primary">Submit</button>  
+      <button href="/showvideos" class="btn btn-primary">Cancel</button>  
+    </div>  
+  </div>  
+    </div>  
+</form>  
+</body>  
+</html>  
