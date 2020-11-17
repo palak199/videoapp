@@ -4,32 +4,62 @@ from users.models import Creator,Viewer,Video
 from django.shortcuts import get_object_or_404 
 import json
 from django.http import HttpResponse
+from django.template.context_processors import csrf
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.contrib.auth.hashers import make_password, check_password
 
 def login(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
+             username=form.cleaned_data['username']
+             password=form.cleaned_data['password']
              if(form.cleaned_data['user_type']=="Creator"):
-                username=form.cleaned_data['username']
-                password=form.cleaned_data['password']
-                user = get_object_or_404(Creator,username=username,password=password)
-                if(user):
+                try:
+                    user = Creator.objects.get(username=username)
+                except Creator.DoesNotExist:
+                    ctx={
+                        "error":"No such creator... Did you forget to register? or maybe you signed up as a viewer :(",
+                        "form":form
+                    }
+                    return render(request,"login.html",ctx)
+                    
+                if check_password(password, user.password):
                     request.session['user'] = user.id
                     return redirect('/profile')  # takes the admin to profile where he/she can see the video analytics
+                else:
+                    ctx={
+                        "error":"incorrect username password combination",
+                        "form":form
+                    }
+                    return render(request,"login.html",ctx)
                     
              else:
-                username=form.cleaned_data['username']
-                password=form.cleaned_data['password']
-                user= get_object_or_404(Viewer,username=username,password=password)
-                if(user):
+                try:
+                    user= Viewer.objects.get(username=username)
+                except Viewer.DoesNotExist:
+                    ctx={
+                        "error":"No such viewer... Did you forget to register? or maybe you signed up as a creator :(",
+                        "form":form
+                    }
+                    return render(request,"login.html",ctx)
+                if check_password(password, user.password):
                     request.session['user'] = user.id
                     return redirect('/showvideo') #if the user is only a viewer then he/she can see videos and like them
+                else:
+                    ctx={
+                        "error":"incorrect username password combination",
+                        "form":form
+                    }
+                    return render(request,"login.html",ctx)
     else:
         form = LoginForm()
     return render(request,"login.html",{"form":form})
+
 def logout(request):
     del request.session['user']  
-    return redirect('/')      
+    return redirect('/')  
+    
 def creator_profile(request):
     try:
         videos = Video.objects.filter(creator=request.session['user'])
@@ -47,27 +77,33 @@ def creator_profile(request):
         }
         return render(request,"profile.html",ctx)
     except KeyError:
-        user = Creator.objects.get(id=request.session['user'])
-        ctx={
-        "username": user.username,
-        
-        }
-        return render(request, "profile.html", ctx)
+        return redirect("/")
        
 # creator views here.  
 def creator_create(request):  
-    if request.method == "POST":  
+    if request.method == "POST":
+        post = request.POST.copy() # to make it mutable
+        post['password'] = make_password(request.POST['password'])
+        request.POST = post
         form = CreatorForm(request.POST)  
         if form.is_valid():  
-            try:  
-                form.save()  
-                newuser=Creator.objects.get(username= form.cleaned_data['username']) 
-                request.session['user']=newuser.id
+                try:
+                    newuser=Creator.objects.get(username= form.cleaned_data['username'])
+                    context= {'form': form, 'error':'The username you entered has already been taken. Please try another username.'}
+                    return render(request,'signupcreator.html',context)  
+                except:
+                    form.save() 
+                    newuser=Creator.objects.get(username= form.cleaned_data['username']) 
+                    request.session['user']=newuser.id
+
                 return redirect('/profile')  
-            except:  
-                pass  
+        else:
+             print (form.is_valid())  #form contains data and errors
+             print (form.errors) 
     else:  
         form = CreatorForm()  
+    args = {}
+    args.update(csrf(request))
     return render(request,'signupcreator.html',{'form':form})  
 
 # def creator_show(request):  
@@ -82,10 +118,10 @@ def creator_update(request, username):
     creator = Creator.objects.get(username=username)  
     form = CreatorForm(request.POST, instance = creator)  
     if form.is_valid():  
-        form.save()  
         try:  
-            form.save()  
-            return redirect('/showcreator')  
+            form.save() 
+            ctx={"message":"user updated"} 
+            return redirect('/profile')  
         except:  
             pass  
     else:  
@@ -95,22 +131,27 @@ def creator_update(request, username):
 
 def creator_destroy(request, username):  
     creator = Creator.objects.get(username=username)  
-    creator.delete()  
-    return redirect("/showcreator") 
+    creator.delete() 
+    del request.session['user']  
+    return redirect("/") 
  
 # viewer views here
 def viewer_create(request):  
-    if request.method == "POST":  
+    if request.method == "POST": 
+        post = request.POST.copy() # to make it mutable
+        post['password'] = make_password(request.POST['password'])
+        request.POST = post 
         form = ViewerForm(request.POST)  
-        if form.is_valid():  
-            try:  
-                form.save()  
-                newuser=Creator.objects.get(username= form.cleaned_data['username']) 
-                request.session['user']=newuser.id
-                return redirect('/showvideo')  
-            except:  
-                pass  
-        
+        if form.is_valid():
+            try:
+                newuser=Viewer.objects.get(username= form.cleaned_data['username'])
+                context= {'form': form, 'error':'The username you entered has already been taken. Please try another username.'}
+                return render(request,'signupviewer.html',context)  
+            except:
+                    form.save() 
+                    newuser=Viewer.objects.get(username= form.cleaned_data['username']) 
+                    request.session['user']=newuser.id
+                    return redirect('/showvideo')          
     else:  
         form = ViewerForm()  
     return render(request,'signupviewer.html',{'form':form})  
@@ -127,7 +168,6 @@ def viewer_update(request, username):
     viewer = Viewer.objects.get(username=username)  
     form = ViewerForm(request.POST, instance = viewer)  
     if form.is_valid():  
-        form.save()  
         try:  
             form.save()  
             return redirect('/showvideo')  
@@ -141,27 +181,45 @@ def viewer_update(request, username):
 def viewer_destroy(request, username):  
     viewer = Creator.objects.get(username=username)  
     viewer.delete()  
+    del request.session['user']  
     return redirect("") 
  
 
 # video views here 
 def video_create(request): 
-    user=Creator.objects.get(id=request.session['user'])
-    
+    try:
+        user=Creator.objects.get(id=request.session['user'])
+    except KeyError:
+        return redirect("/")
     if request.method == "POST":  
         form = VideoForm(request.POST)  
         if form.is_valid():  
-            try:  
-                print('valid')
-                form.save()  
-                return redirect('/profile')  
-            except:  
-                pass  
+                if form.data['creator']== user.username:
+                    print("here")
+                    ctx={
+                    "errors":form.errors,
+                    'form':form,
+                    "user":user.username
+                }
+                    return render(request,'videocreate.html',ctx) 
+                else:
+                    form.save()
+                    return redirect('/profile') 
+                 
+                
         else:
             print(form.errors)
+            ctx={
+                    "errors":form.errors,
+                    'form':form,
+                    "user":user.username,
+                    "usrobj":user
+                }
+            return render(request,'videocreate.html',ctx) 
+
     else:  
-        form = VideoForm()  
-    return render(request,'videocreate.html',{'form':form, "user":user.username}) 
+        form = VideoForm(initial={'creator': user.username})  
+    return render(request,'videocreate.html',{'form':form, "usrobj":user, "user":user.username}) 
 
 def video_show(request):
     if request.method =="POST":

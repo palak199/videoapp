@@ -20,7 +20,7 @@ class VideoForm(forms.ModelForm):
         
 class LoginForm(forms.Form):
      username = forms.CharField(label="USER NAME", max_length=100)
-     password = forms.CharField(label="PASSWORD", max_length=150)
+     password = forms.CharField(label="PASSWORD", max_length=150,widget=forms.PasswordInput)
      User_Type =( 
         ("Creator", "Creator"), 
         ("Viewer", "Viewer"), ) 

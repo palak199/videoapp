@@ -16,6 +16,9 @@
   <form method="POST" class="form-login" action="/">  
         {% csrf_token %}  
         {{ form.as_p }}
+        {% if error %}
+        <p>{{ error }}</p>
+        {% endif %}
         <input class="btn btn-sm btn-primary" type="submit" value="Submit">  
 </form> 
 </div>

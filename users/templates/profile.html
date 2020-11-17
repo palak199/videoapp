@@ -26,6 +26,9 @@
 		</div>
 	</div>
 </header>
+{% if message %}
+<div onload="alert()"></div>
+{% endif %}
 <div style="margin-left:500px" role="group" aria-label="First group">
   <a class="btn btn-primary" href="addvideo">Add a new video</a>
   <a class="btn btn-primary" href="editcreator/{{ username }}">Edit your profile</a>
@@ -109,7 +112,10 @@
       var ctx = document.getElementById('bar-chart').getContext('2d');
       window.myPie = new Chart(ctx, config);
     };
-
+    function alert(){
+      console.log("here")
+      alert("updated user")
+    }
   </script>
 </body>
 </html>
